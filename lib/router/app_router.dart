@@ -8,4 +8,5 @@ class AppRouter{
   static final String setting = '/setting';
   static final String mv = '/mv';
   static final String play = '/play';
+  static final String cloud = '/cloud';
 }

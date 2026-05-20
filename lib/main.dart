@@ -67,14 +67,15 @@ Future<void> initWindow() async {
 Future<void> initMedia() async {
   // MediaKit.ensureInitialized();
   final appDocDir = await getApplicationDocumentsDirectory();
-  await BujuanMusicManager().init(cookiePath: '${appDocDir.path}/cookies', debug: false);
-  await AudioService.init(
+  await BujuanMusicManager().init(cookiePath: '${appDocDir.path}/cookies', debug: true);
+  final handler = await AudioService.init(
     builder: () => BujuanMusicHandler(),
     config: AudioServiceConfig(
       androidNotificationChannelId: 'com.sixbugs.bujuan.channel.audio',
       androidNotificationChannelName: 'Music playback',
     ),
   );
+  await handler.init();
 }
 
 class MyApp extends ConsumerWidget {

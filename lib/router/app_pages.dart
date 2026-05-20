@@ -1,3 +1,4 @@
+import 'package:bujuan_music/pages/cloud/cloud_page.dart';
 import 'package:bujuan_music/pages/home/today/today_page.dart';
 import 'package:bujuan_music/pages/mv/mv_page.dart';
 import 'package:bujuan_music/pages/play/desktop_play_page.dart';
@@ -39,6 +40,10 @@ class AppPages {
     GoRoute(path: AppRouter.login, builder: (c, s) => const LoginPage()),
     GoRoute(path: AppRouter.splash, builder: (c, s) => const SplashPage()),
     GoRoute(path: AppRouter.mv, builder: (c, s) => MvPage(s.extra as int)),
+    GoRoute(
+      path: AppRouter.cloud,
+      pageBuilder: (context, state) => NoTransitionPage(child: const CloudPage()),
+    ),
   ];
 
   static Page<dynamic> buildPageWithSlideUpTransition({

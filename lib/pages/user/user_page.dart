@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hugeicons_pro/hugeicons.dart';
 
 import '../../router/app_router.dart';
 import '../../utils/adaptive_screen_utils.dart';
@@ -45,7 +46,15 @@ class MobileUser extends StatelessWidget {
             pWidth: 100,
             borderRadius: 20.w,
           ),
-          title: 'Music library (${playlist.likeList.playlist?.length})'),
+          title: 'Music library (${playlist.likeList.playlist?.length})',
+          actions: [
+            IconButton(
+              icon: Icon(HugeIconsSolid.cloud, size: 22.sp),
+              tooltip: 'My Cloud',
+              onPressed: () => context.push(AppRouter.cloud),
+            ),
+          ],
+      ),
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: 10.w,vertical: 5.w),
         child: CustomScrollView(

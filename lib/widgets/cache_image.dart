@@ -34,10 +34,14 @@ class CachedImage extends StatelessWidget {
       return imageUrl.isEmpty
           ? Container(height: height, width: width, color: Colors.grey.withAlpha(140))
           : CachedNetworkImage(
-              imageUrl: '$imageUrl?param=${pWidth}y$pHeight',
+              imageUrl: imageUrl.startsWith('http:') ? imageUrl.replaceFirst('http:', 'https:') : imageUrl,
               width: width,
               height: height,
               fit: fit,
+              httpHeaders: const {
+                'Referer': 'https://music.163.com',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36',
+              },
               placeholder: (context, url) => placeholder ?? _defaultPlaceholder(),
               errorWidget: (context, url, error) => errorWidget ?? _defaultErrorWidget(),
               fadeInDuration: const Duration(milliseconds: 300),

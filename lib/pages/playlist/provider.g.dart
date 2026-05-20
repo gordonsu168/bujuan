@@ -9,17 +9,11 @@ part of 'provider.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(playlistDetail)
+@ProviderFor(PlaylistDetail)
 const playlistDetailProvider = PlaylistDetailFamily._();
 
 final class PlaylistDetailProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<PlaylistData>,
-          PlaylistData,
-          FutureOr<PlaylistData>
-        >
-    with $FutureModifier<PlaylistData>, $FutureProvider<PlaylistData> {
+    extends $AsyncNotifierProvider<PlaylistDetail, PlaylistData> {
   const PlaylistDetailProvider._({
     required PlaylistDetailFamily super.from,
     required int super.argument,
@@ -43,15 +37,7 @@ final class PlaylistDetailProvider
 
   @$internal
   @override
-  $FutureProviderElement<PlaylistData> $createElement(
-    $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
-
-  @override
-  FutureOr<PlaylistData> create(Ref ref) {
-    final argument = this.argument as int;
-    return playlistDetail(ref, argument);
-  }
+  PlaylistDetail create() => PlaylistDetail();
 
   @override
   bool operator ==(Object other) {
@@ -64,10 +50,17 @@ final class PlaylistDetailProvider
   }
 }
 
-String _$playlistDetailHash() => r'3d5c2dc1c694eeea7eb0ba153fbea44ce9938cac';
+String _$playlistDetailHash() => r'b7479abc51684834deb508fe79da462b27419752';
 
 final class PlaylistDetailFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<PlaylistData>, int> {
+    with
+        $ClassFamilyOverride<
+          PlaylistDetail,
+          AsyncValue<PlaylistData>,
+          PlaylistData,
+          FutureOr<PlaylistData>,
+          int
+        > {
   const PlaylistDetailFamily._()
     : super(
         retry: null,
@@ -82,4 +75,26 @@ final class PlaylistDetailFamily extends $Family
 
   @override
   String toString() => r'playlistDetailProvider';
+}
+
+abstract class _$PlaylistDetail extends $AsyncNotifier<PlaylistData> {
+  late final _$args = ref.$arg as int;
+  int get id => _$args;
+
+  FutureOr<PlaylistData> build(int id);
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final created = build(_$args);
+    final ref = this.ref as $Ref<AsyncValue<PlaylistData>, PlaylistData>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<PlaylistData>, PlaylistData>,
+              AsyncValue<PlaylistData>,
+              Object?,
+              Object?
+            >;
+    element.handleValue(ref, created);
+  }
 }

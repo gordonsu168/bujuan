@@ -9,41 +9,41 @@ part of 'provider.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(getMediaLyric)
-const getMediaLyricProvider = GetMediaLyricProvider._();
+@ProviderFor(cloudMediaList)
+const cloudMediaListProvider = CloudMediaListProvider._();
 
-final class GetMediaLyricProvider
+final class CloudMediaListProvider
     extends
         $FunctionalProvider<
-          AsyncValue<List<LyricLine>>,
-          List<LyricLine>,
-          FutureOr<List<LyricLine>>
+          AsyncValue<List<MediaItem>>,
+          List<MediaItem>,
+          FutureOr<List<MediaItem>>
         >
-    with $FutureModifier<List<LyricLine>>, $FutureProvider<List<LyricLine>> {
-  const GetMediaLyricProvider._()
+    with $FutureModifier<List<MediaItem>>, $FutureProvider<List<MediaItem>> {
+  const CloudMediaListProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'getMediaLyricProvider',
+        name: r'cloudMediaListProvider',
         isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$getMediaLyricHash();
+  String debugGetCreateSourceHash() => _$cloudMediaListHash();
 
   @$internal
   @override
-  $FutureProviderElement<List<LyricLine>> $createElement(
+  $FutureProviderElement<List<MediaItem>> $createElement(
     $ProviderPointer pointer,
   ) => $FutureProviderElement(pointer);
 
   @override
-  FutureOr<List<LyricLine>> create(Ref ref) {
-    return getMediaLyric(ref);
+  FutureOr<List<MediaItem>> create(Ref ref) {
+    return cloudMediaList(ref);
   }
 }
 
-String _$getMediaLyricHash() => r'3acdacc012e893ac27865caa9dcb9674fcded3b2';
+String _$cloudMediaListHash() => r'1a475edda16d688dd5f8f1a2d194964e55d4432a';

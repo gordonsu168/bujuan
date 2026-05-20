@@ -1,5 +1,4 @@
 import 'package:audio_service/audio_service.dart';
-import 'package:bujuan_music_api/api/recommend/entity/recommend_new_song_entity.dart';
 import 'package:bujuan_music_api/api/recommend/entity/recommend_resource_entity.dart';
 import 'package:bujuan_music_api/api/recommend/entity/recommend_song_entity.dart';
 import 'package:bujuan_music_api/api/top/entity/top_artist_entity.dart';
@@ -12,14 +11,12 @@ part 'provider.g.dart';
 @riverpod
 Future<HomeData> newAlbum(Ref ref) async {
   var recommendResourceFuture = BujuanMusicManager().recommendResource();
-  var songsFuture = BujuanMusicManager().recommendNewSong(limit: 30);
   var topArtistFuture = BujuanMusicManager().topArtist(limit: 10);
   var recommendSongFuture = BujuanMusicManager().recommendSongs();
 
   var list = await Future.wait([
     recommendResourceFuture,
     topArtistFuture,
-    songsFuture,
     recommendSongFuture,
   ]);
   return compute(_buildHomeData, list);
@@ -28,23 +25,21 @@ Future<HomeData> newAlbum(Ref ref) async {
 HomeData _buildHomeData(List list) {
   var playlist = list[0] as RecommendResourceEntity;
   var listArtist = list[1] as TopArtistEntity;
-  var songEntity = list[2] as RecommendNewSongEntity;
-  var recommendSongEntity = list[3] as RecommendSongEntity;
-  var songs = songEntity.result ?? [];
+  var recommendSongEntity = list[2] as RecommendSongEntity;
+  var recommend = recommendSongEntity.data?.dailySongs ?? [];
 
-  var medias = songs
+  var medias = recommend
       .map(
         (e) => MediaItem(
           id: '${e.id}',
           title: e.name ?? "",
-          duration: Duration(milliseconds: e.song?.duration ?? 0),
-          artist: (e.song?.artists ?? []).map((e) => e.name).toList().join(' '),
-          artUri: Uri.parse(e.song?.album?.picUrl ?? ''),
-          extras: {'mv': e.song?.mvid ?? 0},
+          duration: Duration(milliseconds: e.dt ?? 0),
+          artist: (e.ar ?? []).map((e) => e.name).toList().join(' '),
+          artUri: Uri.parse(e.al?.picUrl ?? ''),
+          extras: {'mv': e.mv ?? 0},
         ),
       )
       .toList();
-  var recommend = recommendSongEntity.data?.dailySongs ?? [];
   return HomeData(
     playlist,
     listArtist,

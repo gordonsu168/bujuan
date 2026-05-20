@@ -20,78 +20,58 @@ class LocalProxyService {
 
   Future<void> start() async {
     if (_started) return;
-    _server = await HttpServer.bind(InternetAddress.loopbackIPv4, port);
-    _started = true;
-    print('LocalProxyService running on http://127.0.0.1:$port');
-    _server!.listen((HttpRequest request) async {
-      final path = request.uri.path;
+    try {
+      _server = await HttpServer.bind(InternetAddress.loopbackIPv4, port);
+      _started = true;
+      print('LocalProxyService running on http://127.0.0.1:$port');
+      _server!.listen((HttpRequest request) async {
+        final path = request.uri.path;
 
-      if (path.startsWith('/song/')) {
-        final songId = path.split('/').last;
+        if (path.startsWith('/song/')) {
+          final songId = path.split('/').last;
 
-        try {
-          // ① 获取真实播放地址
-          final realUrl = await _getUrl(songId);
-          if (realUrl.isEmpty) throw 'Real URL is empty';
+          try {
+            print('Proxying request for songId: $songId');
+            // ① 获取真实播放地址
+            final realUrl = await _getUrl(songId);
+            if (realUrl.isEmpty) {
+              print('Error: Real URL is empty for songId: $songId');
+              throw 'Real URL is empty';
+            }
 
-          print('$songId  --->  $realUrl');
+            print('$songId  --->  $realUrl');
 
-          // ② 转发真实音频请求（流式）
-          final client = HttpClient();
-          final realRequest = await client.getUrl(Uri.parse(realUrl));
-          final realResponse = await realRequest.close();
+            // ② 转发真实音频请求（流式）
+            final client = HttpClient();
+            final realRequest = await client.getUrl(Uri.parse(realUrl));
+            final realResponse = await realRequest.close();
 
-          // ③ 把真实响应头复制给本地响应
-          realResponse.headers.forEach((name, values) {
-            request.response.headers.set(name, values.join(','));
-          });
+            // ③ 把真实响应头复制给本地响应
+            realResponse.headers.forEach((name, values) {
+              request.response.headers.set(name, values.join(','));
+            });
 
-          request.response.statusCode = realResponse.statusCode;
+            request.response.statusCode = realResponse.statusCode;
 
-          // ④ 流式转发（关键）
-          await realResponse.pipe(request.response);
-        } catch (e) {
+            // ④ 流式转发（关键）
+            await realResponse.pipe(request.response);
+          } catch (e) {
+            print('Proxy error for songId $songId: $e');
+            request.response
+              ..statusCode = 500
+              ..write('Proxy error: $e')
+              ..close();
+          }
+        } else {
           request.response
-            ..statusCode = 500
-            ..write('Proxy error: $e')
+            ..statusCode = 404
+            ..write('Not found')
             ..close();
         }
-      } else {
-        request.response
-          ..statusCode = 404
-          ..write('Not found')
-          ..close();
-      }
-    });
-
-    // _server!.listen((HttpRequest req) async {
-    //   final path = req.uri.path;
-    //   if (path.startsWith('/song/')) {
-    //     final songId = path.replaceFirst('/song/', '');
-    //     try {
-    //       final url = await _getUrl(songId);
-    //       if (url.isEmpty) throw 'URL empty';
-    //
-    //       final client = HttpClient();
-    //       final proxiedRequest = await client.getUrl(Uri.parse(url));
-    //       final proxiedResponse = await proxiedRequest.close();
-    //
-    //       proxiedResponse.headers.forEach((name, values) {
-    //         req.response.headers.set(name, values.join(','));
-    //       });
-    //
-    //       await req.response.addStream(proxiedResponse);
-    //       await req.response.close();
-    //     } catch (e) {
-    //       req.response.statusCode = 500;
-    //       req.response.write('Failed to stream URL: $e');
-    //       await req.response.close();
-    //     }
-    //   } else {
-    //     req.response.statusCode = 404;
-    //     await req.response.close();
-    //   }
-    // });
+      });
+    } catch (e) {
+      print('Failed to start LocalProxyService: $e');
+    }
   }
 
   Future<String> _getUrl(String songId) async {
@@ -100,6 +80,7 @@ class LocalProxyService {
     // 拦截短时间内重复请求
     final lastTime = _lastRequestTime[songId];
     if (lastTime != null && now.difference(lastTime) < minInterval) {
+      print('Returning cached URL (throttle) for $songId');
       return _cache[songId]?.url ?? '';
     }
     _lastRequestTime[songId] = now;
@@ -107,21 +88,40 @@ class LocalProxyService {
     // 缓存有效直接返回
     final cached = _cache[songId];
     if (cached != null && cached.expire.isAfter(now.add(Duration(seconds: 15)))) {
+      print('Returning cached URL for $songId');
       return cached.url;
     }
 
     // 缓存不存在或过期 → 请求后端
+    print('Fetching new URL from server for $songId');
     final newUrl = await fetchUrlFromServer(songId);
-    final expire = now.add(Duration(minutes: 15));
-    _cache[songId] = _CachedUrl(newUrl, expire);
+    if (newUrl.isNotEmpty) {
+      final expire = now.add(Duration(minutes: 15));
+      _cache[songId] = _CachedUrl(newUrl, expire);
+    }
 
     return newUrl;
   }
 
   Future<String> fetchUrlFromServer(String songId) async {
-    SongUrlEntity? songUrlEntity = await BujuanMusicManager().songUrl(ids: [songId]);
-    if (songUrlEntity != null && (songUrlEntity.data ?? []).isNotEmpty) {
-      return songUrlEntity.data!.first.url ?? '';
+    // 逐级降级获取 URL：云盘歌曲通常没有 jyeffect/sky 级别
+    final levels = ['standard', 'exhigh', 'lossless', 'hires'];
+    for (final level in levels) {
+      try {
+        print('Requesting songUrl for $songId with level $level');
+        SongUrlEntity? songUrlEntity = await BujuanMusicManager().songUrl(ids: [songId], level: level);
+        if (songUrlEntity != null && (songUrlEntity.data ?? []).isNotEmpty) {
+          final url = songUrlEntity.data!.first.url ?? '';
+          if (url.isNotEmpty) {
+            print('Successfully got URL for $songId: $url');
+            return url;
+          }
+        }
+        print('No URL found for $songId with level $level');
+      } catch (e) {
+        print('Error calling songUrl for $songId with level $level: $e');
+        continue;
+      }
     }
     return '';
   }

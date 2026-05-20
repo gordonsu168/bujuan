@@ -80,8 +80,8 @@ class BujuanMusicHandler extends BaseAudioHandler with QueueHandler, SeekHandler
   final AudioPlayer _audioPlayer = AudioPlayer();
 
   init() async {
-    AudioSession session = await AudioSession.instance;
-    session.configure(const AudioSessionConfiguration.speech());
+    final session = await AudioSession.instance;
+    await session.configure(const AudioSessionConfiguration.music());
   }
 
   /// 更新播放列表
@@ -105,12 +105,16 @@ class BujuanMusicHandler extends BaseAudioHandler with QueueHandler, SeekHandler
           ProgressiveAudioSource(Uri.parse(LocalProxyService().proxyUrl(song.id)), tag: song.id),
         );
       }
-      await _audioPlayer.setAudioSources(
-        playlist,
-        initialIndex: index,
-        initialPosition: position,
-        preload: false,
-      );
+      try {
+        await _audioPlayer.setAudioSources(
+          playlist,
+          initialIndex: index,
+          initialPosition: position,
+          preload: false,
+        );
+      } catch (e) {
+        print('Error setting audio sources: $e');
+      }
     }
     if (index == 0) {
       mediaItem.add(songs[index]);
